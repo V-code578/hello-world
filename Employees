@@ -1,0 +1,88 @@
+import { useState, useEffect } from 'react';
+function Employee() {
+    const [emps, setEmps] = useState([]);
+    const [token, setToken] = useState("");
+    const [emp, setEmp] = useState({ empId: 0, empName: " ", salary: 0});
+    const [saved, setSaved] = useState(0);
+    useEffect(() => {
+        var username = "Ramesh";
+        var role = "Admin";
+        var key = "My name is James Bond";
+        fetch("http://localhost:5171/api/auth?userName=" + username + "&role="
+                + role + "&key=" + key).then(result => result.text()).then(result => { setToken(result); })
+    }, []);
+    useEffect(() => {
+        fetch("http://localhost:5171/api/Employee", {
+                    headers: { 'Authorization': 'Bearer ' + token }
+       }).then(result => result.json()).then(result => { setEmps(result); });
+    }, [token, saved]);
+    const saveEmp = (event) => {
+        event.preventDefault();
+        fetch("http://localhost:5171/api/Employee", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify(emp)
+        }).then(result => result.json()).then(result => { 
+            alert("New employee added");
+            setSaved(result);
+           });
+    }
+    const updateEmp = () => {
+        fetch("http://localhost:5171/api/Employee/" + emp.empId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify(emp)
+        }).then(result => result.json()).then(result => { 
+            alert("Employee details updated");
+            setSaved(result);
+           });
+    }
+    const deleteEmp = () => {
+        fetch("http://localhost:5171/api/Employee/" + emp.empId, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token },
+        }).then(result => result.text()).then(result => { 
+            alert("Employee deleted");
+            setSaved(result);
+           });
+    }
+    return (
+        <div>
+            <h3>Employee Form</h3>
+            <form onSubmit={saveEmp}>
+                Emp Id: <input type="number" value={emp.empId} 
+                    onChange={(e) => setEmp(previousState => {
+                        return { ...previousState, empId: e.target.value }})} /> <br/>
+                Emp Name: <input type="text" value={emp.empName} 
+                    onChange={(e) => setEmp(previousState => {
+                        return { ...previousState, empName: e.target.value }})} /><br />
+                Salary: <input type="number" value={emp.salary} 
+                    onChange={(e) => setEmp(previousState => {
+                        return { ...previousState, salary: e.target.value }})} /><br />
+                <input type="submit" value="Save" />
+                <input type="button" value="Update" onClick={updateEmp} />
+                <input type="button" value="Delete" onClick={deleteEmp} />
+            </form>
+            <h3>List of Employees</h3>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Emp Id</th><th>Name</th><th>Salary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {
+                        emps.map(emp => (
+                            <tr>
+                                <td>{emp.empId}</td><td>{emp.empName}</td><td>{emp.salary}</td>
+                            </tr>
+                        ))
+                    }
+                </tbody>
+            </table>
+        </div>
+    );
+}
+export default Employee;
